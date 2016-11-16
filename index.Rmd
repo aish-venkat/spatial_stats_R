@@ -1,0 +1,774 @@
+---
+title       : Spatial Statistics in R
+subtitle    : Only a crash course... the real course takes a year, or a career!
+author      : Aishwarya Venkat
+job         : Lab Assistant, Tufts Data Lab @ Tisch Library
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [mathjax]            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+logo        : sbbeelogo2.png
+
+---
+
+<!-- Limit image width and height -->
+<style type='text/css'>
+img {
+    max-height: 800px;
+    max-width: 1040px;
+}
+
+.title-slide {
+  background-color: #FFFFFF;
+  /* background-color: #CBE7A5; #EDE0CF; ; #CA9F9D*/
+  /* background-image:url(http://goo.gl/EpXln); */
+}
+
+.title-slide hgroup > h1{
+ font-family: 'Oswald', 'Helvetica', sanserif; 
+}
+
+.title-slide hgroup > h1, 
+.title-slide hgroup > h2 {
+  color: #731400 ;  /* ; #731400*/
+}
+
+.segue hgroup > h1{
+ font-family: 'Oswald', 'Helvetica', sanserif; 
+ font-size: 70px
+}
+
+.segue hgroup > h1, 
+.segue hgroup > h2 {
+  color: #731400 ;  /* ; #731400*/
+}
+
+.MathJax {
+font-size: 2em;
+}
+
+</style>
+
+<!-- Center image on slide -->
+<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+<script type='text/javascript'>
+$(function() {
+    $("p:has(img)").addClass('centered');
+});
+</script>
+
+<style>
+strong {
+  font-weight: bold;
+}
+</style>
+
+## Welcome!
+
+* You do not need to be an R/RStudio expert to start!
+* I will give you the concepts and the basic code. 
+* You as researchers can (should) study more if you want (have) to.
+* Come back to these slides/concepts any time, see [References] ()
+* End with a group exercise: tell me/show me how you will analyze this data
+* Groups of 3-4, preferably 1 student with R/RStudio experience in each group
+
+--- .segue
+
+## Types of spatial data
+
+---
+
+## Geostatistical Data
+
+* Surface has a value at every location, but we only take samples in certain locations. 
+* Has underlying continuous surface
+
+![An example of geostatistical data: elevation in Australia](./assets/img/austr_elv_1.png)
+
+---
+
+## Regional data
+
+* Data measured/reported in fixed spatial extents.
+* Example: census data aggregated by block group, census tract, county, etc.
+
+![An example of regional data: elevation in Australia](./assets/img/austr_census.png)
+
+---
+
+## Point Patterns (no underlying surface)
+
+* Location + other relevant metrics (Example: tree species locations + tree heights)
+
+![An example of point patterns: tree heights in Australia](./assets/img/austr_pointpattern.png)
+
+---
+
+## Geostatistical vs. point pattern approaches
+
+* Geostatistical methods
+  * Spatial locations are treated as explanatory variables ((lat1, long1), (lat2, long2)...)
+  * Values attached to locations are response variables (elev1, elev2...)
+  * Example: Elevation at a point can be predicted by coordinates of a point 
+  
+  $elev_1 = \beta_1*(lat_1, long_1) + \beta_2*covariate1_\text{(lat1, long1)}$
+  
+* Point pattern methods
+  * Treat spatial location AND values attached to locations as response variables 
+  * Investigate covariate effects on point pattern intensity
+  * Point is data-response is spatially explicit!
+  * Example: Elevation at a point can be predicted by [x,y,z] variables
+  
+  $elev1_\text{(lat1, long1)}  = \beta_1*covariate1_\text{(lat1, long1)} + \beta_2*covariate2_\text{(lat1, long1)}$
+
+---
+
+## Geostatistical vs. point pattern methods
+
+* Geostatistical methods
+  * Response SURFACE can be characterized by response locations and other spatial covariates
+  * Methods focus on characterizing SURFACE
+  * Operations: interpolation, kriging, spatial regressions and lag models, variograms and correlograms
+  
+* Point pattern methods
+  * Spatial location AND values can be explained by other spatial covariates
+  * Methods focus on modeling the point pattern intensity in space
+  * Operations: intensity and density maps, spatial covariate analysis, point pattern modeling, prediction & simulation 
+
+---
+
+## Quick Review: Spatial data structures
+
+* Spatial data
+  * Vectors: Points, lines, polygons (anything you can draw)
+  * Rasters: numerical grids--each cell has a meaningful value (color, elevation, etc.)
+      - Slightly more complicated methods- we won't cover this here
+
+* Data frames are most common means of data storage in R
+* Attach spatial information (lat/long, lines) to make data frames spatial
+  + Points: SpatialPoints, SpatialPointsDataFrame
+  + Lines: SpatialLines, SpatialLinesDataFrame
+  + Polygons: SpatialPolygons, SpatialPolygonsDataFrame
+
+--- .segue
+
+## Geostatistical Methods
+# What is the underlying value surface?
+# How are features (points, lines, polygons) related to/affected by their neighbors?
+# How can we accurately model spatially interdependent data?
+
+---
+
+## Meuse dataset
+
+> Concentration of four heavy metals measured in the top soil in a flood plain along the river Meuse, with additional variables
+
+
+``` {r load_meuse}
+
+library(sp); 
+data(meuse); summary(meuse); str(meuse);
+
+```
+
+---&twocol w1:50% w2:50%
+
+## Mapping meuse dataset
+
+***=left
+
+``` {r  plot_meuse_zinc_1, eval=FALSE, fig.width=12,fig.height=3,fig.align="center",out.width="1100px"}
+
+coordinates(meuse)=~x+y;
+
+data(meuse.riv); 
+meuse.sr = SpatialPolygons(list(Polygons(
+  list(Polygon(meuse.riv)),"meuse.riv")))
+rv = list("sp.polygons", meuse.sr, 
+          fill = "lightblue")
+
+spplot(meuse["zinc"], do.log = TRUE,
+	key.space = "bottom", 
+	sp.layout = list(rv),
+	main = "Zinc Concentration")
+
+```
+
+***=right
+
+``` {r  plot_meuse_zinc_2, eval=TRUE, echo=FALSE, warning=FALSE, error=FALSE}
+
+data(meuse); coordinates(meuse)=~x+y;
+data(meuse.riv); 
+meuse.sr = SpatialPolygons(list(Polygons(list(Polygon(meuse.riv)),"meuse.riv")))
+rv = list("sp.polygons", meuse.sr, fill = "lightblue")
+spplot(meuse["zinc"], do.log = TRUE,
+	key.space = "bottom", 
+	sp.layout = list(rv),
+	main = "Zinc Concentration")
+
+```
+
+---&twocol w1:30% w2:50%
+
+## Use spplot to overlay data 
+
+***=left
+
+``` {r plot_meuse_cad_1, eval=F}
+
+data(meuse.grid); 
+coordinates(meuse.grid) = ~x+y; 
+gridded(meuse.grid) = TRUE
+
+meuse.sl = SpatialLines(list(Lines(list(
+  Line(meuse.riv)), ID="1")))
+
+par(mar=c(7,0,4,4)); 
+image(meuse.grid["dist"], main = 
+"Relative Magnitude of Cadmium 
+Concentration & distance from Meuse River"); 
+lines(meuse.sl); 
+
+with(meuse, symbols(x=meuse@coords[,1], 
+  y=meuse@coords[,2], circles=
+    meuse@data$cadmium, inches=1/5, 
+  col="black", bg="green", add=T))
+
+```
+
+***=right
+
+``` {r plot_meuse_cad_2, eval=T, echo=F}
+
+data(meuse.grid); coordinates(meuse.grid) = ~x+y; gridded(meuse.grid) = TRUE
+meuse.sl = SpatialLines(list(Lines(list(Line(meuse.riv)), ID="1")))
+
+par(mar=c(3,0,3,0)); 
+image(meuse.grid["dist"], 
+main = "Relative Magnitude of Cadmium
+Concentration & distance from Meuse River"); 
+lines(meuse.sl); 
+
+with(meuse, symbols(x=meuse@coords[,1], y=meuse@coords[,2], 
+  circles=meuse@data$cadmium, inches=1/5, col="black", bg="green", add=T))
+
+```
+
+---
+
+## Interpolation
+
+# Knowns: sample values in certain known points
+
+# Goal: predict values at unknown points, create value surface over study area
+
+# Assumption: things that are closer together are more alike than things that are farther apart
+
+# Methods:
+
+  * <strong>Trend</strong>: calculates best fit for entire surface area**
+
+  * <strong>Inverse Distance Weighting (IDW)</strong>: closer samples are weighted heavily, predicted values are averages of sample data points around area of interest * individual weights
+
+  * <strong>Kriging</strong>: similar to IDW, with finer controls on weights, directionality, and autocorrelation (statistical relationships between points). 
+    * Uses semivariograms to define relationships between points, distances, and values.
+    
+  * <strong>Splines</strong>: regression line segments over entire study area--allows finer control over your fitted model
+    * Minimizes overall surface curvature, good for gently varying surfaces 
+
+---&twocol
+
+## Inverse Distance-Weighted Interpolation of zinc concentrations
+
+***=right
+
+```{r meuse_idw_1, eval=F}
+
+library(gstat)
+data(meuse); data(meuse.grid); 
+coordinates(meuse.grid) = ~x+y; 
+gridded(meuse.grid) = TRUE
+
+zinc.idw = idw(zinc~1, meuse, 
+               meuse.grid)
+
+spplot(zinc.idw["var1.pred"], 
+       main = "IDW Zinc 
+       Concentrations")
+
+```
+
+***=left
+
+```{r meuse_idw_2, eval=TRUE, echo=FALSE, results="hide", message=FALSE, warnings=FALSE}
+
+library(gstat); data(meuse); #coordinates(meuse)=~x+y;
+data(meuse.grid); coordinates(meuse.grid) = ~x+y; gridded(meuse.grid) = TRUE
+zinc.idw = idw(zinc~1, meuse, meuse.grid)
+par(mar=c(35,5,5,5), oma=c(5,5,5,5)); 
+spplot(zinc.idw["var1.pred"], main = "IDW Zinc Concentrations")
+lines(meuse.sl); 
+
+```
+
+---&twocol
+
+## Investigate transformations using IDW results
+
+***=left
+```{r meuse_plots_1, eval=FALSE}
+
+t1<-data.frame(zinc=meuse$zinc, 
+    dist=meuse$dist)
+p1<-ggplot(t1, aes(zinc, dist))+
+  geom_point() + geom_smooth(method="lm")
+p2<-ggplot(t1, aes(log(zinc), dist))+
+  geom_point() + geom_smooth(method="lm")
+p3<-ggplot(t1, aes(log(zinc), log(dist)))+
+  geom_point() + geom_smooth(method="lm")
+p4<-ggplot(t1, aes(log(zinc), sqrt(dist)))+
+  geom_point() + geom_smooth(method="lm")
+
+library(gridExtra)
+grid.arrange(p1, p2, p3, p4, 
+    nrow=2, ncol=2)
+
+```
+
+***=right
+
+```{r meuse_plots_2, eval=TRUE, echo=FALSE, results="hide", fig.height=6, fig.width=7, warning=FALSE}
+
+t1<-data.frame(zinc=meuse$zinc, dist=meuse$dist)
+p1<-ggplot(t1, aes(zinc, dist))+geom_point() + geom_smooth(method = "lm")
+p2<-ggplot(t1, aes(log(zinc), dist))+geom_point() + geom_smooth(method = "lm")
+p3<-ggplot(t1, aes(log(zinc), log(dist)))+geom_point() + geom_smooth(method = "lm")
+p4<-ggplot(t1, aes(log(zinc), sqrt(dist)))+geom_point() + geom_smooth(method = "lm")
+
+library(gridExtra); 
+#par(oma=c(5,0,0,5), mar=c(5,0,0,5))
+grid.arrange(p1, p2, p3, p4, nrow=2, ncol=2)
+
+```
+
+---&twocol
+
+## Use transformation to get better IDW result
+
+***=left
+
+# Original IDW: zinc~1
+
+```{r meuse_idw_new_1, eval=TRUE, echo=FALSE, results="hide", message=FALSE, warnings=FALSE}
+
+library(gstat); data(meuse); coordinates(meuse)=~x+y;
+data(meuse.grid); coordinates(meuse.grid) = ~x+y; gridded(meuse.grid) = TRUE
+zinc.idw = idw(zinc~1, meuse, meuse.grid)
+par(mar=c(35,5,5,5), oma=c(5,5,5,5)); 
+spplot(zinc.idw["var1.pred"], main = "Original IDW Zinc Concentrations")
+
+```
+
+***=right
+
+#   Modified IDW: log(zinc)~sqrt(dist)
+
+```{r meuse_idw_new_2, eval=TRUE, echo=FALSE, results="hide", message=FALSE, warnings=FALSE}
+
+library(gstat); data(meuse); #coordinates(meuse)=~x+y;
+data(meuse.grid); coordinates(meuse.grid) = ~x+y; gridded(meuse.grid) = TRUE
+zinc.idw = idw(formula=log(zinc)~sqrt(dist), locations=~x+y, meuse, meuse.grid)
+zinc.idw$transformed<-exp(zinc.idw$var1.pred)
+par(mar=c(35,5,5,5), oma=c(5,5,5,5)); 
+spplot(zinc.idw["transformed"], main = "Modified IDW Zinc Concentrations")
+
+```
+
+---&twocol
+
+## Kriging
+
+***=left
+  
+* Each point can be paired to every other point in your dataset. Each pair has a unique distance. 
+
+* For each distance:
+
+  $$ \text{SV(dist$_h$)} = 0.5*mean((v_2 - v_1)^2+(v_3 - v_1)^2...) $$
+
+* Each distance has a semivariogram--which is too much to process. So we calculate AVERAGE semivariance for each distance.
+* Plot semivariogram
+
+***=right
+
+<img src="./assets/img/kriging_1.png" width="450">
+
+---
+
+## Kriging
+
+* Fit a model to plotted semivariogram, model dependence structure
+* Linear, Gaussian, Exponential, Circular, Spherical models
+
+
+<img src="./assets/img/semivariogram.jpeg" width="500">
+
+* Use this information to make predictions about your value surface!
+
+---&twocol
+
+## Fit Variogram to Meuse dataset
+
+***=left
+
+```{r meuse_var_1, eval=FALSE}
+
+lzn.vgm <- variogram(log(zinc)~1, meuse) 
+lzn.fit <- fit.variogram(lzn.vgm, 
+          model=vgm(, "Sph"))
+
+# Here we only specify a spherical model.
+# We can adjust sill, range, nugget, 
+# kappa, etc. if we want
+
+plot(lzn.vgm, lzn.fit)
+
+```
+
+***=right
+
+```{r meuse_var_2, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
+
+library(gstat); library(sp); data(meuse); coordinates(meuse)=~x+y;
+data(meuse.grid); coordinates(meuse.grid) = ~x+y; gridded(meuse.grid) = TRUE
+
+lzn.vgm <- variogram(log(zinc)~1, meuse) # calculates sample variogram values 
+lzn.fit <- fit.variogram(lzn.vgm, model=vgm(, "Sph"))
+
+plot(lzn.vgm, lzn.fit)
+
+```
+
+---&twocol
+
+## Use fitted model as basis for kriging
+
+***=right
+```{r meuse_krige_1, eval=FALSE}
+
+lzn.kriged = krige(log(zinc)~1, 
+      meuse, meuse.grid, model = lzn.fit)
+lzn.kriged$transform<-
+  exp(lzn.kriged$var1.pred)
+spplot(lzn.kriged["transform"])
+
+```
+
+***=left
+```{r meuse_krige_2, echo=FALSE, warning=FALSE, message=FALSE, results="hide"}
+
+library(gstat); library(sp); data(meuse); coordinates(meuse)=~x+y;
+data(meuse.grid); coordinates(meuse.grid) = ~x+y; gridded(meuse.grid) = TRUE
+
+lzn.kriged = krige(log(zinc)~1, meuse, meuse.grid, model = lzn.fit)
+lzn.kriged$transform<-exp(lzn.kriged$var1.pred)
+spplot(lzn.kriged["transform"], main = "Ordinary Kriging: Zinc Concentrations")
+
+```
+
+---&twocol
+
+## Comparing IDW and Kriging results
+
+***=left
+
+# IDW:log(zinc)~sqrt(dist)
+
+
+```{r meuse_idwkrige_comparison1, eval=TRUE, echo=FALSE, results="hide", message=FALSE, warning=FALSE, fig.height=6.5, fig.width=5.5}
+
+library(gstat); data(meuse); #coordinates(meuse)=~x+y;
+data(meuse.grid); coordinates(meuse.grid) = ~x+y; gridded(meuse.grid) = TRUE
+
+zinc.idw = idw(formula=log(zinc)~sqrt(dist), locations=~x+y, meuse, meuse.grid)
+zinc.idw$transformed<-exp(zinc.idw$var1.pred)
+par(mar=c(0,0,5,0))
+spplot(zinc.idw["transformed"])
+
+```
+
+***=right
+
+# Ordinary Kriging: log(zinc)~sqrt(dist)
+
+
+```{r meuse_idwkrige_comparison2, echo=FALSE, warning=FALSE, message=FALSE, results="hide", fig.height=6.5, fig.width=5.5}
+
+library(gstat); data(meuse); coordinates(meuse)=~x+y;
+data(meuse.grid); coordinates(meuse.grid) = ~x+y; gridded(meuse.grid) = TRUE
+
+lzn.vgm <- variogram(log(zinc)~sqrt(dist), meuse) # calculates sample variogram values 
+lzn.fit <- fit.variogram(lzn.vgm, model=vgm(, "Sph"))
+
+lzn.kriged = krige(log(zinc)~sqrt(dist), meuse, meuse.grid, model = lzn.fit)
+lzn.kriged$transform<-exp(lzn.kriged$var1.pred)
+par(mar=c(0,0,5,0))
+spplot(lzn.kriged["transform"])
+
+```
+
+---.segue
+
+## Point Process methods
+# Is the point process random?
+# Does the process depend on spatial covariates? 
+# How can the point process intensity be modelled?
+
+
+--- &twocol
+
+## Lansing Forest dataset
+
+***=left
+```{r lansing_load, warning=FALSE, message=FALSE, results="hold"}
+
+library(spatstat); data(lansing); 
+summary(lansing)
+
+```
+
+***=right
+
+```{r lansing_plot, warning=FALSE, message=FALSE}
+
+plot(split(lansing))
+
+```
+
+---
+
+## Plotting intensities for each tree type
+
+```{r lansing_intensity_plot, warning=FALSE, message=FALSE,fig.width=10, fig.height=10}
+
+par(mar=c(30,0,0,0), oma=c(30,0,0,0))
+plot(density(split(lansing)), main=c("Density of Trees in Lansing Forest"))
+
+```
+
+---
+
+## Kolmogorov-Smirnov Test for spatial randomness
+
+> 1. A Poisson distribution is controlled by $\lambda$ (specifies mean & variance)
+> 2. We can calculate $\lambda$ from observed point pattern, and simulate random Poisson point processes with the same $\lambda$
+> 3. If some assumptions are fulfilled, a Poisson point process is <strong>Completely Spatially Random</strong>.
+
+```{r lansing_csr, warning=FALSE, message=FALSE}
+
+KS<-cdf.test(lansing, "x"); KS
+
+```
+
+---
+
+## Plot results of KS test
+
+```{r lansing_ks_plot, warning=FALSE, message=FALSE, fig.width=5.5, fig.height=5.5}
+
+# Conclusion: observed distribution of x is not a uniform Poisson process, therefore 
+# it is not completely spatially random.
+
+plot(KS)
+
+```
+
+---
+
+## Fit model to point pattern
+
+```{r lansing_ppm, warning=FALSE, message=FALSE}
+
+fit <- ppm(lansing, ~x + y)
+fit
+
+```
+
+---
+
+## Fit model to individual points split by tree type
+
+```{r lansing_split, warning=FALSE, message=FALSE}
+
+lansing_split<-split(lansing)
+fit_split<-lapply(lansing_split, ppm, ~x+y)
+
+coef(fit_split$hickory)
+coef(fit_split$maple)
+
+## Conclusion: based on our model, each tree type has different model coefficients
+## Therefore, each tree type may potentially have a different trend
+
+```
+
+---&twocol
+
+## Diagnose fit using lurking variable plots
+
+***=left
+* Diagonal graphs show lurking variable plots for x and y
+  * Dotted lines give range of expected values, lines indicate deviations
+  
+* Major deviations around y=(0.3, 0.5, 0.75) and x=(x<0.4, x>0.6)
+
+* Smoothed Residual Plot: excess positive residuals in red hotspot indicate that the model underestimates the true intensity of points in this vicinity
+
+***=right
+
+```{r lansing_maple_diagnose_1, eval=FALSE}
+diagnose.ppm(fit_split$maple)
+
+```
+
+```{r lansing_maple_diagnose, echo=FALSE, results="hide", fig.width=8, fig.height=10}
+par(mar=c(1,1,1,1), oma=c(16,0,0,7))
+diagnose.ppm(fit_split$maple)
+```
+
+***=right
+
+---&twocol
+
+## Use Q-Q plot to plot distribution of residuals
+
+***=left
+* Q-Q plot of the smoothed residuals, with 5% critical envelopes from simulations of the fitted model
+* Our data seems to be heavily light-tailed
+* Solution: update model, recheck fits, iterative (or potentially automate-able) model-fitting process
+
+***=right
+
+```{r lansing_maple_qqplot_1, eval=FALSE}
+qqplot.ppm(fit_split$maple, nsim=19)
+```
+
+```{r lansing_maple_qqplot_2, eval=TRUE, echo=FALSE, results="hide"}
+par(oma=c(3,0,0,0))
+qqplot.ppm(fit_split$maple, nsim=19)
+```
+
+---&twocol
+
+## Spatial covariates: Tropical trees dataset (bei)
+
+***=left
+```{r bei_load, warning=FALSE, message=FALSE, results="asis"}
+
+data(bei); # This contains point pattern
+data(bei.extra); # This contains covariates
+bei.extra;
+
+# This dataset has two covariates, 
+# as images within the study area--
+# elevation (elev) and slope (grad)
+
+```
+
+***=right
+
+```{r bei_plot_grad}
+
+grad <- bei.extra$grad
+plot(grad)
+plot(bei, add=TRUE)
+
+```
+
+---
+
+## Build a model with spatial covariates
+
+```{r bei_ppm_cov, warning=FALSE, message=FALSE, fig.width=10, fig.height=10}
+
+cov_fit<-ppm(bei, ~offset(log(grad)))
+par(mar=c(0,0,0,0), oma=c(20,0,0,0))
+diagnose.ppm(cov_fit)
+
+```
+
+---&twocol
+
+## Assess model fits using ANOVA
+
+***=left
+```{r bei_anova, warning=FALSE, message=FALSE}
+
+elev<-bei.extra$elev
+mod1 <- ppm(bei, ~1); mod2 <- ppm(bei, ~grad)
+mod3 <- ppm(bei, ~elev)
+anova(mod1, mod2, mod3, test = "Chisq")
+
+```
+
+***=right
+
+```{r bei_qqplot_1, eval=FALSE}
+qqplot.ppm(mod3, nsim=19)
+```
+
+```{r bei_qqplot_2, eval=TRUE, eval=TRUE, echo=FALSE, results="hide"}
+par(oma=c(10,0,0,0))
+qqplot.ppm(mod3, nsim=19)
+
+```
+
+---
+
+## EXERCISE
+
+# What kind of data is this (geostatistical/point process)?
+# What would your first exploratory model be?
+# ONE thing you learned from this dataset
+
+
+* Jura dataset from gstat package
+
+```{r meuse_load, eval=FALSE}
+
+library(gstat); data(jura); coordinates(jura.val) = ~Xloc+Yloc;
+
+```
+
+* ants dataset from spatstat package
+
+```{r ants_load, eval=FALSE}
+
+library(spatstat); data(ants); data(ants.extra);
+
+```
+
+---
+
+## References
+
+- Yuri M. Zhukov, Harvard University [Applied Spatial Statistics in R] (http://www.people.fas.harvard.edu/~zhukov/spatial.html)
+
+- Roger Bivand, Edzer Pebesma, & Virgilio Gomez-Rubio [Applied Spatial Data
+Analysis with R] (http://gis.humboldt.edu/OLM/r/Spatial%20Analysis%20With%20R.pdf)
+
+- Adrian Baddeley, [Spatial Statistics ASC Workshop Computing with R, 2008] (http://maths-people.anu.edu.au/~johnm/courses/r/ASC2008/pdf/spatial-ohp.pdf), [Analysing spatial point patterns in R] (https://training.fws.gov/courses/references/tutorials/geospatial/CSP7304/documents/PointPatterTutorial.pdf)
+
+- ArcGIS, [Comparing interpolation methods] (http://pro.arcgis.com/en/pro-app/tool-reference/3d-analyst/comparing-interpolation-methods.htm#ESRI_SECTION1_32C31E8C13E34228A9A70A8E7C41EC99), [How Kriging Works] (http://desktop.arcgis.com/en/arcmap/10.3/tools/3d-analyst-toolbox/how-kriging-works.htm)
+
+- John Lewis, [Spatial Interpolation] (http://geostat-course.org/system/files/geostat13_spatinterPM.pdf)
+
+- Edzer Pebesma, [The meuse data set: a brief tutorial for the gstat R package] (https://cran.r-project.org/web/packages/gstat/vignettes/gstat.pdf)
+
+- Pebesma, E.J., 2004. [Multivariable geostatistics in S: the gstat package] (https://cran.r-project.org/web/packages/gstat/index.html). Computers & Geosciences, 30: 683-691.
+
+- Ramnath Vaidyanathan, [Slidify] (http://slidify.org/)
+
+- Adrian Baddeley, Ege Rubak, Rolf Turner (2015). [Spatial Point Patterns: Methodology and Applications with R] (http://www.crcpress.com/Spatial-Point-Patterns-Methodology-and-Applications-with-R/Baddeley-Rubak-Turner/9781482210200/). London: Chapman and Hall/CRC Press, 2015. 

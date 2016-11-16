@@ -1,1 +1,1276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spatial Statistics in R</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Spatial Statistics in R">
+  <meta name="author" content="Aishwarya Venkat">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
 
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <aside class="gdbar">
+    <img src="assets/img/sbbeelogo2.png">
+  </aside>
+  <hgroup class="auto-fadein">
+    <h1>Spatial Statistics in R</h1>
+    <h2>Only a crash course... the real course takes a year, or a career!</h2>
+    <p>Aishwarya Venkat<br/>Lab Assistant, Tufts Data Lab @ Tisch Library</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <article data-timings="">
+    <!-- Limit image width and height -->
+
+<style type='text/css'>
+img {
+    max-height: 800px;
+    max-width: 1040px;
+}
+
+.title-slide {
+  background-color: #FFFFFF;
+  /* background-color: #CBE7A5; #EDE0CF; ; #CA9F9D*/
+  /* background-image:url(http://goo.gl/EpXln); */
+}
+
+.title-slide hgroup > h1{
+ font-family: 'Oswald', 'Helvetica', sanserif; 
+}
+
+.title-slide hgroup > h1, 
+.title-slide hgroup > h2 {
+  color: #731400 ;  /* ; #731400*/
+}
+
+.segue hgroup > h1{
+ font-family: 'Oswald', 'Helvetica', sanserif; 
+ font-size: 70px
+}
+
+.segue hgroup > h1, 
+.segue hgroup > h2 {
+  color: #731400 ;  /* ; #731400*/
+}
+
+.MathJax {
+font-size: 2em;
+}
+
+</style>
+
+<!-- Center image on slide -->
+
+<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+
+<script type='text/javascript'>
+$(function() {
+    $("p:has(img)").addClass('centered');
+});
+</script>
+
+<style>
+strong {
+  font-weight: bold;
+}
+</style>
+
+<h2>Welcome!</h2>
+
+<ul>
+<li>You do not need to be an R/RStudio expert to start!</li>
+<li>I will give you the concepts and the basic code. </li>
+<li>You as researchers can (should) study more if you want (have) to.</li>
+<li>Come back to these slides/concepts any time, see <a href="">References</a></li>
+<li>End with a group exercise: tell me/show me how you will analyze this data</li>
+<li>Groups of 3-4, preferably 1 student with R/RStudio experience in each group</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="segue" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>Types of spatial data</h2>
+  </hgroup>
+  <article data-timings="">
+    
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Geostatistical Data</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Surface has a value at every location, but we only take samples in certain locations. </li>
+<li>Has underlying continuous surface</li>
+</ul>
+
+<p><img src="./assets/img/austr_elv_1.png" alt="An example of geostatistical data: elevation in Australia"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Regional data</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Data measured/reported in fixed spatial extents.</li>
+<li>Example: census data aggregated by block group, census tract, county, etc.</li>
+</ul>
+
+<p><img src="./assets/img/austr_census.png" alt="An example of regional data: elevation in Australia"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-5" style="background:;">
+  <hgroup>
+    <h2>Point Patterns (no underlying surface)</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Location + other relevant metrics (Example: tree species locations + tree heights)</li>
+</ul>
+
+<p><img src="./assets/img/austr_pointpattern.png" alt="An example of point patterns: tree heights in Australia"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-6" style="background:;">
+  <hgroup>
+    <h2>Geostatistical vs. point pattern approaches</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li><p>Geostatistical methods</p>
+
+<ul>
+<li>Spatial locations are treated as explanatory variables ((lat1, long1), (lat2, long2)...)</li>
+<li>Values attached to locations are response variables (elev1, elev2...)</li>
+<li>Example: Elevation at a point can be predicted by coordinates of a point </li>
+</ul>
+
+<p>\(elev_1 = \beta_1*(lat_1, long_1) + \beta_2*covariate1_\text{(lat1, long1)}\)</p></li>
+<li><p>Point pattern methods</p>
+
+<ul>
+<li>Treat spatial location AND values attached to locations as response variables </li>
+<li>Investigate covariate effects on point pattern intensity</li>
+<li>Point is data-response is spatially explicit!</li>
+<li>Example: Elevation at a point can be predicted by [x,y,z] variables</li>
+</ul>
+
+<p>\(elev1_\text{(lat1, long1)}  = \beta_1*covariate1_\text{(lat1, long1)} + \beta_2*covariate2_\text{(lat1, long1)}\)</p></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-7" style="background:;">
+  <hgroup>
+    <h2>Geostatistical vs. point pattern methods</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li><p>Geostatistical methods</p>
+
+<ul>
+<li>Response SURFACE can be characterized by response locations and other spatial covariates</li>
+<li>Methods focus on characterizing SURFACE</li>
+<li>Operations: interpolation, kriging, spatial regressions and lag models, variograms and correlograms</li>
+</ul></li>
+<li><p>Point pattern methods</p>
+
+<ul>
+<li>Spatial location AND values can be explained by other spatial covariates</li>
+<li>Methods focus on modeling the point pattern intensity in space</li>
+<li>Operations: intensity and density maps, spatial covariate analysis, point pattern modeling, prediction &amp; simulation </li>
+</ul></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-8" style="background:;">
+  <hgroup>
+    <h2>Quick Review: Spatial data structures</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li><p>Spatial data</p>
+
+<ul>
+<li>Vectors: Points, lines, polygons (anything you can draw)</li>
+<li>Rasters: numerical grids--each cell has a meaningful value (color, elevation, etc.)
+
+<ul>
+<li>Slightly more complicated methods- we won&#39;t cover this here</li>
+</ul></li>
+</ul></li>
+<li><p>Data frames are most common means of data storage in R</p></li>
+<li><p>Attach spatial information (lat/long, lines) to make data frames spatial</p>
+
+<ul>
+<li>Points: SpatialPoints, SpatialPointsDataFrame</li>
+<li>Lines: SpatialLines, SpatialLinesDataFrame</li>
+<li>Polygons: SpatialPolygons, SpatialPolygonsDataFrame</li>
+</ul></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="segue" id="slide-9" style="background:;">
+  <hgroup>
+    <h2>Geostatistical Methods</h2>
+  </hgroup>
+  <article data-timings="">
+    <h1>What is the underlying value surface?</h1>
+
+<h1>How are features (points, lines, polygons) related to/affected by their neighbors?</h1>
+
+<h1>How can we accurately model spatially interdependent data?</h1>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-10" style="background:;">
+  <hgroup>
+    <h2>Meuse dataset</h2>
+  </hgroup>
+  <article data-timings="">
+    <blockquote>
+<p>Concentration of four heavy metals measured in the top soil in a flood plain along the river Meuse, with additional variables</p>
+</blockquote>
+
+<pre><code class="r">library(sp); 
+data(meuse); summary(meuse); str(meuse);
+</code></pre>
+
+<pre><code>##        x                y             cadmium           copper      
+##  Min.   :178605   Min.   :329714   Min.   : 0.200   Min.   : 14.00  
+##  1st Qu.:179371   1st Qu.:330762   1st Qu.: 0.800   1st Qu.: 23.00  
+##  Median :179991   Median :331633   Median : 2.100   Median : 31.00  
+##  Mean   :180005   Mean   :331635   Mean   : 3.246   Mean   : 40.32  
+##  3rd Qu.:180630   3rd Qu.:332463   3rd Qu.: 3.850   3rd Qu.: 49.50  
+##  Max.   :181390   Max.   :333611   Max.   :18.100   Max.   :128.00  
+##                                                                     
+##       lead            zinc             elev             dist        
+##  Min.   : 37.0   Min.   : 113.0   Min.   : 5.180   Min.   :0.00000  
+##  1st Qu.: 72.5   1st Qu.: 198.0   1st Qu.: 7.546   1st Qu.:0.07569  
+##  Median :123.0   Median : 326.0   Median : 8.180   Median :0.21184  
+##  Mean   :153.4   Mean   : 469.7   Mean   : 8.165   Mean   :0.24002  
+##  3rd Qu.:207.0   3rd Qu.: 674.5   3rd Qu.: 8.955   3rd Qu.:0.36407  
+##  Max.   :654.0   Max.   :1839.0   Max.   :10.520   Max.   :0.88039  
+##                                                                     
+##        om         ffreq  soil   lime       landuse       dist.m      
+##  Min.   : 1.000   1:84   1:97   0:111   W      :50   Min.   :  10.0  
+##  1st Qu.: 5.300   2:48   2:46   1: 44   Ah     :39   1st Qu.:  80.0  
+##  Median : 6.900   3:23   3:12           Am     :22   Median : 270.0  
+##  Mean   : 7.478                         Fw     :10   Mean   : 290.3  
+##  3rd Qu.: 9.000                         Ab     : 8   3rd Qu.: 450.0  
+##  Max.   :17.000                         (Other):25   Max.   :1000.0  
+##  NA&#39;s   :2                              NA&#39;s   : 1
+</code></pre>
+
+<pre><code>## &#39;data.frame&#39;:    155 obs. of  14 variables:
+##  $ x      : num  181072 181025 181165 181298 181307 ...
+##  $ y      : num  333611 333558 333537 333484 333330 ...
+##  $ cadmium: num  11.7 8.6 6.5 2.6 2.8 3 3.2 2.8 2.4 1.6 ...
+##  $ copper : num  85 81 68 81 48 61 31 29 37 24 ...
+##  $ lead   : num  299 277 199 116 117 137 132 150 133 80 ...
+##  $ zinc   : num  1022 1141 640 257 269 ...
+##  $ elev   : num  7.91 6.98 7.8 7.66 7.48 ...
+##  $ dist   : num  0.00136 0.01222 0.10303 0.19009 0.27709 ...
+##  $ om     : num  13.6 14 13 8 8.7 7.8 9.2 9.5 10.6 6.3 ...
+##  $ ffreq  : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ soil   : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 1 1 1 2 2 2 2 1 1 2 ...
+##  $ lime   : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 2 2 2 1 1 1 1 1 1 1 ...
+##  $ landuse: Factor w/ 15 levels &quot;Aa&quot;,&quot;Ab&quot;,&quot;Ag&quot;,..: 4 4 4 11 4 11 4 2 2 15 ...
+##  $ dist.m : num  50 30 150 270 380 470 240 120 240 420 ...
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-11" style="background:;">
+  <hgroup>
+    <h2>Mapping meuse dataset</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <pre><code class="r">coordinates(meuse)=~x+y;
+
+data(meuse.riv); 
+meuse.sr = SpatialPolygons(list(Polygons(
+  list(Polygon(meuse.riv)),&quot;meuse.riv&quot;)))
+rv = list(&quot;sp.polygons&quot;, meuse.sr, 
+          fill = &quot;lightblue&quot;)
+
+spplot(meuse[&quot;zinc&quot;], do.log = TRUE,
+    key.space = &quot;bottom&quot;, 
+    sp.layout = list(rv),
+    main = &quot;Zinc Concentration&quot;)
+</code></pre>
+
+</div>
+<div style='float:right;width:48%;'>
+  <p><img src="assets/fig/plot_meuse_zinc_2-1.png" alt="plot of chunk plot_meuse_zinc_2"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-12" style="background:;">
+  <hgroup>
+    <h2>Use spplot to overlay data</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <pre><code class="r">data(meuse.grid); 
+coordinates(meuse.grid) = ~x+y; 
+gridded(meuse.grid) = TRUE
+
+meuse.sl = SpatialLines(list(Lines(list(
+  Line(meuse.riv)), ID=&quot;1&quot;)))
+
+par(mar=c(7,0,4,4)); 
+image(meuse.grid[&quot;dist&quot;], main = 
+&quot;Relative Magnitude of Cadmium 
+Concentration &amp; distance from Meuse River&quot;); 
+lines(meuse.sl); 
+
+with(meuse, symbols(x=meuse@coords[,1], 
+  y=meuse@coords[,2], circles=
+    meuse@data$cadmium, inches=1/5, 
+  col=&quot;black&quot;, bg=&quot;green&quot;, add=T))
+</code></pre>
+
+</div>
+<div style='float:right;width:48%;'>
+  <p><img src="assets/fig/plot_meuse_cad_2-1.png" alt="plot of chunk plot_meuse_cad_2"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-13" style="background:;">
+  <hgroup>
+    <h2>Interpolation</h2>
+  </hgroup>
+  <article data-timings="">
+    <h1>Knowns: sample values in certain known points</h1>
+
+<h1>Goal: predict values at unknown points, create value surface over study area</h1>
+
+<h1>Assumption: things that are closer together are more alike than things that are farther apart</h1>
+
+<h1>Methods:</h1>
+
+<ul>
+<li><p><strong>Trend</strong>: calculates best fit for entire surface area**</p></li>
+<li><p><strong>Inverse Distance Weighting (IDW)</strong>: closer samples are weighted heavily, predicted values are averages of sample data points around area of interest * individual weights</p></li>
+<li><p><strong>Kriging</strong>: similar to IDW, with finer controls on weights, directionality, and autocorrelation (statistical relationships between points). </p>
+
+<ul>
+<li>Uses semivariograms to define relationships between points, distances, and values.</li>
+</ul></li>
+<li><p><strong>Splines</strong>: regression line segments over entire study area--allows finer control over your fitted model</p>
+
+<ul>
+<li>Minimizes overall surface curvature, good for gently varying surfaces </li>
+</ul></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-14" style="background:;">
+  <hgroup>
+    <h2>Inverse Distance-Weighted Interpolation of zinc concentrations</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <p><img src="assets/fig/meuse_idw_2-1.png" alt="plot of chunk meuse_idw_2"></p>
+
+<pre><code>## Error in plot.xy(xy.coords(x, y), type = type, ...): plot.new has not been called yet
+</code></pre>
+
+</div>
+<div style='float:right;width:48%;'>
+  <pre><code class="r">library(gstat)
+data(meuse); data(meuse.grid); 
+coordinates(meuse.grid) = ~x+y; 
+gridded(meuse.grid) = TRUE
+
+zinc.idw = idw(zinc~1, meuse, 
+               meuse.grid)
+
+spplot(zinc.idw[&quot;var1.pred&quot;], 
+       main = &quot;IDW Zinc 
+       Concentrations&quot;)
+</code></pre>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-15" style="background:;">
+  <hgroup>
+    <h2>Investigate transformations using IDW results</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <pre><code class="r">t1&lt;-data.frame(zinc=meuse$zinc, 
+    dist=meuse$dist)
+p1&lt;-ggplot(t1, aes(zinc, dist))+
+  geom_point() + geom_smooth(method=&quot;lm&quot;)
+p2&lt;-ggplot(t1, aes(log(zinc), dist))+
+  geom_point() + geom_smooth(method=&quot;lm&quot;)
+p3&lt;-ggplot(t1, aes(log(zinc), log(dist)))+
+  geom_point() + geom_smooth(method=&quot;lm&quot;)
+p4&lt;-ggplot(t1, aes(log(zinc), sqrt(dist)))+
+  geom_point() + geom_smooth(method=&quot;lm&quot;)
+
+library(gridExtra)
+grid.arrange(p1, p2, p3, p4, 
+    nrow=2, ncol=2)
+</code></pre>
+
+</div>
+<div style='float:right;width:48%;'>
+  <p><img src="assets/fig/meuse_plots_2-1.png" alt="plot of chunk meuse_plots_2"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-16" style="background:;">
+  <hgroup>
+    <h2>Use transformation to get better IDW result</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <h1>Original IDW: zinc~1</h1>
+
+<p><img src="assets/fig/meuse_idw_new_1-1.png" alt="plot of chunk meuse_idw_new_1"></p>
+
+</div>
+<div style='float:right;width:48%;'>
+  <h1>Modified IDW: log(zinc)~sqrt(dist)</h1>
+
+<p><img src="assets/fig/meuse_idw_new_2-1.png" alt="plot of chunk meuse_idw_new_2"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-17" style="background:;">
+  <hgroup>
+    <h2>Kriging</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <ul>
+<li><p>Each point can be paired to every other point in your dataset. Each pair has a unique distance. </p></li>
+<li><p>For each distance:</p>
+
+<p>\[ \text{SV(dist$_h$)} = 0.5*mean((v_2 - v_1)^2+(v_3 - v_1)^2...) \]</p></li>
+<li><p>Each distance has a semivariogram--which is too much to process. So we calculate AVERAGE semivariance for each distance.</p></li>
+<li><p>Plot semivariogram</p></li>
+</ul>
+
+</div>
+<div style='float:right;width:48%;'>
+  <p><img src="./assets/img/kriging_1.png" width="450"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-18" style="background:;">
+  <hgroup>
+    <h2>Kriging</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Fit a model to plotted semivariogram, model dependence structure</li>
+<li>Linear, Gaussian, Exponential, Circular, Spherical models</li>
+</ul>
+
+<p><img src="./assets/img/semivariogram.jpeg" width="500"></p>
+
+<ul>
+<li>Use this information to make predictions about your value surface!</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-19" style="background:;">
+  <hgroup>
+    <h2>Fit Variogram to Meuse dataset</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <pre><code class="r">lzn.vgm &lt;- variogram(log(zinc)~1, meuse) 
+lzn.fit &lt;- fit.variogram(lzn.vgm, 
+          model=vgm(, &quot;Sph&quot;))
+
+# Here we only specify a spherical model.
+# We can adjust sill, range, nugget, 
+# kappa, etc. if we want
+
+plot(lzn.vgm, lzn.fit)
+</code></pre>
+
+</div>
+<div style='float:right;width:48%;'>
+  <p><img src="assets/fig/meuse_var_2-1.png" alt="plot of chunk meuse_var_2"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-20" style="background:;">
+  <hgroup>
+    <h2>Use fitted model as basis for kriging</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <p><img src="assets/fig/meuse_krige_2-1.png" alt="plot of chunk meuse_krige_2"></p>
+
+</div>
+<div style='float:right;width:48%;'>
+  <pre><code class="r">lzn.kriged = krige(log(zinc)~1, 
+      meuse, meuse.grid, model = lzn.fit)
+lzn.kriged$transform&lt;-
+  exp(lzn.kriged$var1.pred)
+spplot(lzn.kriged[&quot;transform&quot;])
+</code></pre>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-21" style="background:;">
+  <hgroup>
+    <h2>Comparing IDW and Kriging results</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <h1>IDW:log(zinc)~sqrt(dist)</h1>
+
+<p><img src="assets/fig/meuse_idwkrige_comparison1-1.png" alt="plot of chunk meuse_idwkrige_comparison1"></p>
+
+</div>
+<div style='float:right;width:48%;'>
+  <h1>Ordinary Kriging: log(zinc)~sqrt(dist)</h1>
+
+<p><img src="assets/fig/meuse_idwkrige_comparison2-1.png" alt="plot of chunk meuse_idwkrige_comparison2"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="segue" id="slide-22" style="background:;">
+  <hgroup>
+    <h2>Point Process methods</h2>
+  </hgroup>
+  <article data-timings="">
+    <h1>Is the point process random?</h1>
+
+<h1>Does the process depend on spatial covariates?</h1>
+
+<h1>How can the point process intensity be modelled?</h1>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-23" style="background:;">
+  <hgroup>
+    <h2>Lansing Forest dataset</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <pre><code class="r">library(spatstat); data(lansing); 
+summary(lansing)
+</code></pre>
+
+<pre><code>## Marked planar point pattern:  2251 points
+## Average intensity 2251 points per square unit (one unit = 924 feet)
+## 
+## *Pattern contains duplicated points*
+## 
+## Coordinates are given to 3 decimal places
+## i.e. rounded to the nearest multiple of 0.001 units (one unit = 924 feet)
+## 
+## Multitype:
+##          frequency proportion intensity
+## blackoak       135 0.05997335       135
+## hickory        703 0.31230560       703
+## maple          514 0.22834300       514
+## misc           105 0.04664594       105
+## redoak         346 0.15370950       346
+## whiteoak       448 0.19902270       448
+## 
+## Window: rectangle = [0, 1] x [0, 1] units
+## Window area = 1 square unit
+## Unit of length: 924 feet
+</code></pre>
+
+</div>
+<div style='float:right;width:48%;'>
+  <pre><code class="r">plot(split(lansing))
+</code></pre>
+
+<p><img src="assets/fig/lansing_plot-1.png" alt="plot of chunk lansing_plot"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-24" style="background:;">
+  <hgroup>
+    <h2>Plotting intensities for each tree type</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">par(mar=c(30,0,0,0), oma=c(30,0,0,0))
+plot(density(split(lansing)), main=c(&quot;Density of Trees in Lansing Forest&quot;))
+</code></pre>
+
+<p><img src="assets/fig/lansing_intensity_plot-1.png" alt="plot of chunk lansing_intensity_plot"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-25" style="background:;">
+  <hgroup>
+    <h2>Kolmogorov-Smirnov Test for spatial randomness</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol class = "build incremental">
+<li>A Poisson distribution is controlled by \(\lambda\) (specifies mean &amp; variance)</li>
+<li>We can calculate \(\lambda\) from observed point pattern, and simulate random Poisson point processes with the same \(\lambda\)</li>
+<li>If some assumptions are fulfilled, a Poisson point process is <strong>Completely Spatially Random</strong>.</li>
+</ol>
+
+<pre><code class="r">KS&lt;-cdf.test(lansing, &quot;x&quot;); KS
+</code></pre>
+
+<pre><code>## 
+##  Spatial Kolmogorov-Smirnov test of CSR in two dimensions
+## 
+## data:  covariate &#39;x&#39; evaluated at points of &#39;lansing&#39; 
+##      and transformed to uniform distribution under CSRI
+## D = 0.027205, p-value = 0.07143
+## alternative hypothesis: two-sided
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-26" style="background:;">
+  <hgroup>
+    <h2>Plot results of KS test</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r"># Conclusion: observed distribution of x is not a uniform Poisson process, therefore 
+# it is not completely spatially random.
+
+plot(KS)
+</code></pre>
+
+<p><img src="assets/fig/lansing_ks_plot-1.png" alt="plot of chunk lansing_ks_plot"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-27" style="background:;">
+  <hgroup>
+    <h2>Fit model to point pattern</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">fit &lt;- ppm(lansing, ~x + y)
+fit
+</code></pre>
+
+<pre><code>## Nonstationary multitype Poisson process
+## 
+## Possible marks: &#39;blackoak&#39;, &#39;hickory&#39;, &#39;maple&#39;, &#39;misc&#39;, &#39;redoak&#39; and 
+## &#39;whiteoak&#39;
+## 
+## Log intensity:  ~x + y
+## 
+## Fitted trend coefficients:
+## (Intercept)           x           y 
+##  5.95818628 -0.07581647  0.01369687 
+## 
+##                Estimate       S.E.    CI95.lo   CI95.hi Ztest        Zval
+## (Intercept)  5.95818628 0.05552837  5.8493527 6.0670199   *** 107.2998657
+## x           -0.07581647 0.07302745 -0.2189477 0.0673147        -1.0381914
+## y            0.01369687 0.07301740 -0.1294146 0.1568083         0.1875837
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-28" style="background:;">
+  <hgroup>
+    <h2>Fit model to individual points split by tree type</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">lansing_split&lt;-split(lansing)
+fit_split&lt;-lapply(lansing_split, ppm, ~x+y)
+
+coef(fit_split$hickory)
+</code></pre>
+
+<pre><code>## (Intercept)           x           y 
+##   6.0630062  -0.2548788   1.1290849
+</code></pre>
+
+<pre><code class="r">coef(fit_split$maple)
+</code></pre>
+
+<pre><code>## (Intercept)           x           y 
+##   6.5700852   0.6180153  -1.4863966
+</code></pre>
+
+<pre><code class="r">## Conclusion: based on our model, each tree type has different model coefficients
+## Therefore, each tree type may potentially have a different trend
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-29" style="background:;">
+  <hgroup>
+    <h2>Diagnose fit using lurking variable plots</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <ul>
+<li><p>Diagonal graphs show lurking variable plots for x and y</p>
+
+<ul>
+<li>Dotted lines give range of expected values, lines indicate deviations</li>
+</ul></li>
+<li><p>Major deviations around y=(0.3, 0.5, 0.75) and x=(x<0.4, x>0.6)</p></li>
+<li><p>Smoothed Residual Plot: excess positive residuals in red hotspot indicate that the model underestimates the true intensity of points in this vicinity</p></li>
+</ul>
+
+</div>
+<div style='float:right;width:48%;'>
+  <pre><code class="r">diagnose.ppm(fit_split$maple)
+</code></pre>
+
+<p><img src="assets/fig/lansing_maple_diagnose-1.png" alt="plot of chunk lansing_maple_diagnose"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-30" style="background:;">
+  <hgroup>
+    <h2>Use Q-Q plot to plot distribution of residuals</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <ul>
+<li>Q-Q plot of the smoothed residuals, with 5% critical envelopes from simulations of the fitted model</li>
+<li>Our data seems to be heavily light-tailed</li>
+<li>Solution: update model, recheck fits, iterative (or potentially automate-able) model-fitting process</li>
+</ul>
+
+</div>
+<div style='float:right;width:48%;'>
+  <pre><code class="r">qqplot.ppm(fit_split$maple, nsim=19)
+</code></pre>
+
+<p><img src="assets/fig/lansing_maple_qqplot_2-1.png" alt="plot of chunk lansing_maple_qqplot_2"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-31" style="background:;">
+  <hgroup>
+    <h2>Spatial covariates: Tropical trees dataset (bei)</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <pre><code class="r">data(bei); # This contains point pattern
+data(bei.extra); # This contains covariates
+bei.extra;
+</code></pre>
+
+<p>List of pixel images</p>
+
+<p>elev:
+real-valued pixel image
+101 x 201 pixel array (ny, nx)
+enclosing rectangle: [-2.5, 1002.5] x [-2.5, 502.5] metres</p>
+
+<p>grad:
+real-valued pixel image
+101 x 201 pixel array (ny, nx)
+enclosing rectangle: [-2.5, 1002.5] x [-2.5, 502.5] metres</p>
+
+<pre><code class="r"># This dataset has two covariates, 
+# as images within the study area--
+# elevation (elev) and slope (grad)
+</code></pre>
+
+</div>
+<div style='float:right;width:48%;'>
+  <pre><code class="r">grad &lt;- bei.extra$grad
+plot(grad)
+plot(bei, add=TRUE)
+</code></pre>
+
+<p><img src="assets/fig/bei_plot_grad-1.png" alt="plot of chunk bei_plot_grad"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-32" style="background:;">
+  <hgroup>
+    <h2>Build a model with spatial covariates</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">cov_fit&lt;-ppm(bei, ~offset(log(grad)))
+par(mar=c(0,0,0,0), oma=c(20,0,0,0))
+diagnose.ppm(cov_fit)
+</code></pre>
+
+<p><img src="assets/fig/bei_ppm_cov-1.png" alt="plot of chunk bei_ppm_cov"></p>
+
+<pre><code>## Model diagnostics (raw residuals)
+## Diagnostics available:
+##  four-panel plot
+##  mark plot 
+##  smoothed residual field
+##  x cumulative residuals
+##  y cumulative residuals
+##  sum of all residuals
+## sum of raw residuals in entire window = -7.475e-08
+## area of entire window = 5e+05
+## quadrature area = 5e+05
+## range of smoothed field =  [-0.007226, 0.009962]
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-33" style="background:;">
+  <hgroup>
+    <h2>Assess model fits using ANOVA</h2>
+  </hgroup>
+  <article data-timings="">
+    
+<div style='float:left;width:48%;' class='centered'>
+  <pre><code class="r">elev&lt;-bei.extra$elev
+mod1 &lt;- ppm(bei, ~1); mod2 &lt;- ppm(bei, ~grad)
+mod3 &lt;- ppm(bei, ~elev)
+anova(mod1, mod2, mod3, test = &quot;Chisq&quot;)
+</code></pre>
+
+<pre><code>## Analysis of Deviance Table
+## 
+## Model 1: ~1   Poisson
+## Model 2: ~grad    Poisson
+## Model 3: ~elev    Poisson
+##   Npar Df Deviance  Pr(&gt;Chi)    
+## 1    1                          
+## 2    2  1   382.25 &lt; 2.2e-16 ***
+## 3    2  0  -376.85              
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+</code></pre>
+
+</div>
+<div style='float:right;width:48%;'>
+  <pre><code class="r">qqplot.ppm(mod3, nsim=19)
+</code></pre>
+
+<p><img src="assets/fig/bei_qqplot_2-1.png" alt="plot of chunk bei_qqplot_2"></p>
+
+</div>
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-34" style="background:;">
+  <hgroup>
+    <h2>EXERCISE</h2>
+  </hgroup>
+  <article data-timings="">
+    <h1>What kind of data is this (geostatistical/point process)?</h1>
+
+<h1>What would your first exploratory model be?</h1>
+
+<h1>ONE thing you learned from this dataset</h1>
+
+<ul>
+<li>Jura dataset from gstat package</li>
+</ul>
+
+<pre><code class="r">library(gstat); data(jura); coordinates(jura.val) = ~Xloc+Yloc;
+</code></pre>
+
+<ul>
+<li>ants dataset from spatstat package</li>
+</ul>
+
+<pre><code class="r">library(spatstat); data(ants); data(ants.extra);
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-35" style="background:;">
+  <hgroup>
+    <h2>References</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li><p>Yuri M. Zhukov, Harvard University <a href="http://www.people.fas.harvard.edu/%7Ezhukov/spatial.html">Applied Spatial Statistics in R</a></p></li>
+<li><p>Roger Bivand, Edzer Pebesma, &amp; Virgilio Gomez-Rubio <a href="http://gis.humboldt.edu/OLM/r/Spatial%20Analysis%20With%20R.pdf">Applied Spatial Data
+Analysis with R</a></p></li>
+<li><p>Adrian Baddeley, <a href="http://maths-people.anu.edu.au/%7Ejohnm/courses/r/ASC2008/pdf/spatial-ohp.pdf">Spatial Statistics ASC Workshop Computing with R, 2008</a>, <a href="https://training.fws.gov/courses/references/tutorials/geospatial/CSP7304/documents/PointPatterTutorial.pdf">Analysing spatial point patterns in R</a></p></li>
+<li><p>ArcGIS, <a href="http://pro.arcgis.com/en/pro-app/tool-reference/3d-analyst/comparing-interpolation-methods.htm#ESRI_SECTION1_32C31E8C13E34228A9A70A8E7C41EC99">Comparing interpolation methods</a>, <a href="http://desktop.arcgis.com/en/arcmap/10.3/tools/3d-analyst-toolbox/how-kriging-works.htm">How Kriging Works</a></p></li>
+<li><p>John Lewis, <a href="http://geostat-course.org/system/files/geostat13_spatinterPM.pdf">Spatial Interpolation</a></p></li>
+<li><p>Edzer Pebesma, <a href="https://cran.r-project.org/web/packages/gstat/vignettes/gstat.pdf">The meuse data set: a brief tutorial for the gstat R package</a></p></li>
+<li><p>Pebesma, E.J., 2004. <a href="https://cran.r-project.org/web/packages/gstat/index.html">Multivariable geostatistics in S: the gstat package</a>. Computers &amp; Geosciences, 30: 683-691.</p></li>
+<li><p>Ramnath Vaidyanathan, <a href="http://slidify.org/">Slidify</a></p></li>
+<li><p>Adrian Baddeley, Ege Rubak, Rolf Turner (2015). <a href="http://www.crcpress.com/Spatial-Point-Patterns-Methodology-and-Applications-with-R/Baddeley-Rubak-Turner/9781482210200/">Spatial Point Patterns: Methodology and Applications with R</a>. London: Chapman and Hall/CRC Press, 2015. </p></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='NA'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Types of spatial data'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Geostatistical Data'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Regional data'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Point Patterns (no underlying surface)'>
+         5
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=6 title='Geostatistical vs. point pattern approaches'>
+         6
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=7 title='Geostatistical vs. point pattern methods'>
+         7
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=8 title='Quick Review: Spatial data structures'>
+         8
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=9 title='Geostatistical Methods'>
+         9
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=10 title='Meuse dataset'>
+         10
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=11 title='Mapping meuse dataset'>
+         11
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=12 title='Use spplot to overlay data'>
+         12
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=13 title='Interpolation'>
+         13
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=14 title='Inverse Distance-Weighted Interpolation of zinc concentrations'>
+         14
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=15 title='Investigate transformations using IDW results'>
+         15
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=16 title='Use transformation to get better IDW result'>
+         16
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=17 title='Kriging'>
+         17
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=18 title='Kriging'>
+         18
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=19 title='Fit Variogram to Meuse dataset'>
+         19
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=20 title='Use fitted model as basis for kriging'>
+         20
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=21 title='Comparing IDW and Kriging results'>
+         21
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=22 title='Point Process methods'>
+         22
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=23 title='Lansing Forest dataset'>
+         23
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=24 title='Plotting intensities for each tree type'>
+         24
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=25 title='Kolmogorov-Smirnov Test for spatial randomness'>
+         25
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=26 title='Plot results of KS test'>
+         26
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=27 title='Fit model to point pattern'>
+         27
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=28 title='Fit model to individual points split by tree type'>
+         28
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=29 title='Diagnose fit using lurking variable plots'>
+         29
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=30 title='Use Q-Q plot to plot distribution of residuals'>
+         30
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=31 title='Spatial covariates: Tropical trees dataset (bei)'>
+         31
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=32 title='Build a model with spatial covariates'>
+         32
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=33 title='Assess model fits using ANOVA'>
+         33
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=34 title='EXERCISE'>
+         34
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=35 title='References'>
+         35
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- MathJax: Fall back to local if CDN offline but local image fonts are not supported (saves >100MB) -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        processEscapes: true
+      }
+    });
+  </script>
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <!-- <script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script> -->
+  <script>window.MathJax || document.write('<script type="text/x-mathjax-config">MathJax.Hub.Config({"HTML-CSS":{imageFont:null}});<\/script><script src="libraries/widgets/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"><\/script>')
+</script>
+<!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>

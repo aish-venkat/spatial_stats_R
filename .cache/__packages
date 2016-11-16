@@ -1,0 +1,9 @@
+base
+nlme
+rpart
+spatstat
+sp
+gstat
+ggplot2
+ggmap
+gridExtra
